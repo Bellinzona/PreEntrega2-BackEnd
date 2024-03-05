@@ -1,0 +1,16 @@
+<h1>Producto Detallado</h1>
+
+
+    <h2 id="titulo">{{product.titulo}}</h2>
+    <p>{{product.descripcion}}</p>
+    <p>Precio: {{product.precio}}</p>
+    <p id="id">ID: {{product._id}}</p>
+
+
+    <a href="/api/views?page=1&sort=asc">Volver</a>
+   
+
+   <a href="/api/carts/{{product._id}}/enCarrito/65e40327a4f421018ab8f927" onclick="event.preventDefault(); document.getElementById('add-to-cart-form').submit();">Añadir al carrito</a>
+<form id="add-to-cart-form" action="/api/carts/{{product._id}}/enCarrito/65e40327a4f421018ab8f927" method="post" style="display: none;"></form>
+
+

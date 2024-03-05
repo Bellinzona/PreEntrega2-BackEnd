@@ -1,0 +1,31 @@
+<h1>Productos</h1>
+
+{{#each docs}}
+    <h2 id="titulo">{{this.titulo}}</h2>
+    <p>{{this.descripcion}}</p>
+    <p>Precio: {{this.precio}}</p>
+    <p id="id">ID: {{this._id}}</p>
+
+    <a href="/api/views/{{this._id}}">Ver Mas</a>
+{{/each}}
+
+{{#if rest.hasNextPage}}
+
+<a href="/api/views?page={{rest.nextPage}}">Adelante</a>
+<p>{{rest.nextPage}}</p>
+
+{{/if}}
+
+
+{{#if rest.hasPrevPage}}
+
+<a href="/api/views?page={{rest.prevPage}}">Atras</a>
+
+
+{{/if}}
+
+
+
+
+
+
