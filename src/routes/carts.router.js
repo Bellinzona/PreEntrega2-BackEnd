@@ -17,6 +17,14 @@ router.get("/", async (req,res) => {
 })
 
 
+router.get("/:id", async (req,res) => {
+    let id = req.params.id
+    let cart = await manager.getCartId(id)
+    console.log(cart)
+    res.render("cart", { productosCarrito: cart });
+})
+
+
 router.post("/", async (req,res) => {
     let carritoCreado = await manager.saveCart(req.body)
     res.send({status: "succes", carritoCreado})

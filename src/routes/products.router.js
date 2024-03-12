@@ -1,14 +1,29 @@
 const {Router} = require("express")
 const Products = require("../dao/dbManagers/products")
+const productModel = require("../dao/models/products.model")
 
 const manager = new Products()
 
 const router = Router()
 
-router.get("/", async (req,res) => {
-    let result = await manager.getAll()
-    res.send({status : "success", result})
-})
+router.get("/", async (req, res) => {
+    let limite = req.query.limit || 2;
+    let pagina = req.query.page || 1;
+    let des = req.query.sort === 'des' ? 1 : -1;
+    let query = req.query.query;
+  
+    let filter = {};
+    if (query) {
+        
+        filter.titulo = new RegExp(query, 'i');
+    }
+
+    let products = await productModel.paginate(filter, { limit: limite, page: pagina, sort: { precio: des }, lean: true });
+    
+    res.render("products", { docs: products.docs, pagina, rest:products });
+    
+});
+
 
 router.get("/:id", async (req,res) => {
     let productId = req.params.id

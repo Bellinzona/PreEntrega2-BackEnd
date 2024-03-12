@@ -18,8 +18,8 @@ router.get("/", async (req,res) => {
         const result = await productModel.paginate({}, { limit: 2, page: pagina, sort: { precio: des }, lean: true });
 
         console.log(result)
-    
         res.render("products", { docs: result.docs, pagina, rest:result });
+       
         
     } catch (error) {
         console.error('Error al obtener los productos:', error);
