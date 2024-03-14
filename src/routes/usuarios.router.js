@@ -24,6 +24,10 @@ router.get('/login', publicAccess, (req,res)=>{
     res.render('login')
 })
 
+router.get('/admin', publicAccess, (req,res)=>{
+    res.render("admin")
+})
+
 
 router.get('/', privateAccess, (req,res)=>{
     res.render('profile',{user: req.session.user})

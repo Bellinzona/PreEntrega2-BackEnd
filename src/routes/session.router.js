@@ -15,26 +15,44 @@ sessionRouter.post('/register',  async (req, res)=>{
 })
 
 
-sessionRouter.post('/login', async (req, res)=>{
-    const { email, password} = req.body; 
+sessionRouter.post('/login', async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
-        return res.status(400).send({status: 'error', error:'Missing data'})
+
+
+    if (email === "admin@gmail.com" && password === "admin123") {
+        // Redirige al usuario administrador a la página de administrador
+        return res.status(500).send({ status: 'Admin', error: 'Admin acces' });
     }
 
-    const user = await userModel.findOne({email, password})
-    if(!user){
-        return res.status(401).send({status:'error', error:'Incorrect credentials'})
+    if (!email || !password) {
+        console.log("mal");
+        return res.status(400).send({ status: 'error', error: 'Missing data' });
     }
+
+    const user = await userModel.findOne({ email, password });
+    if (!user) {
+        console.log("mal");
+        return res.status(401).send({ status: 'error', error: 'Incorrect credentials' });
+    }
+
+    
 
     req.session.user = {
         name: `${user.first_name} ${user.last_name}`,
         email: user.email,
-        age: user.age 
+        age: user.age
     }
 
-    res.send({status:'success', payload: req.session.user, message:'Successfully logged in'})
-})
+    res.send({
+        status: 'success',
+        payload: req.session.user,
+        message: 'Successfully logged in',
+        redirect: '/profile'
+    });
+});
+
+
 
 sessionRouter.get('/logout',(req, res)=>{
     req.session.destroy((err)=>{
@@ -42,6 +60,8 @@ sessionRouter.get('/logout',(req, res)=>{
     })
     res.redirect('/login')
 })
+
+
 
 
 module.exports = sessionRouter;

@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
     let pagina = req.query.page || 1;
     let des = req.query.sort === 'des' ? 1 : -1;
     let query = req.query.query;
+    const user = req.session.user;
   
     let filter = {};
     if (query) {
@@ -19,8 +20,8 @@ router.get("/", async (req, res) => {
     }
 
     let products = await productModel.paginate(filter, { limit: limite, page: pagina, sort: { precio: des }, lean: true });
-    
-    res.render("products", { docs: products.docs, pagina, rest:products });
+    console.log(user)
+    res.render("products", { user: user, docs: products.docs, pagina, rest:products });
     
 });
 
