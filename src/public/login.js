@@ -1,3 +1,5 @@
+const cookie = document.cookie.split('; ').find(row => row.startsWith('coderCookie='));
+
 const loginForm = document.getElementById("loginForm");
 const btnRegister = document.getElementById("btnRegister");
 

@@ -1,7 +1,19 @@
 const {Router} = require('express');
 const userModel = require('../dao/models/user.model');
+const {JWT_SECRET,initializePassport} = require("../public/config/passport.confg")
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
 
 const sessionRouter = Router();
+
+
+sessionRouter.get("/github", passport.authenticate("github",{scope:["user:email"]}), async(req,res) => {})
+
+sessionRouter.get("/githubcallback", passport.authenticate("github", {failureRedirect:"/login"}), async (req,res) => {
+    req.session.user = req.user
+    res.redirect("/")
+})
 
 sessionRouter.post('/register',  async (req, res)=>{
     const { first_name, last_name, email, age,password} = req.body; 
@@ -11,7 +23,9 @@ sessionRouter.post('/register',  async (req, res)=>{
     }
 
     const result = await userModel.create({first_name, last_name, email, age,password})
-    res.send({status: 'success', mesage: 'user registered'})
+    
+    const token = jwt.sign({email, password, role: "user" }, JWT_SECRET, {expiresIn:'24h'})
+    res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
 })
 
 
@@ -21,8 +35,11 @@ sessionRouter.post('/login', async (req, res) => {
 
 
     if (email === "admin@gmail.com" && password === "admin123") {
-        // Redirige al usuario administrador a la página de administrador
-        return res.status(500).send({ status: 'Admin', error: 'Admin acces' });
+        
+        const token = jwt.sign({email, password, role: "admin" }, JWT_SECRET, {expiresIn:'24h'})
+        res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
+        return res.status(500)
+        
     }
 
     if (!email || !password) {
@@ -44,12 +61,9 @@ sessionRouter.post('/login', async (req, res) => {
         age: user.age
     }
 
-    res.send({
-        status: 'success',
-        payload: req.session.user,
-        message: 'Successfully logged in',
-        redirect: '/profile'
-    });
+
+    const token = jwt.sign({email, password, role: "user"}, JWT_SECRET, {expiresIn:'24h'})
+    res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
 });
 
 
