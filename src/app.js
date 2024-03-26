@@ -8,12 +8,13 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 
 
+
 const productRouter = require("./routes/products.router")
 const cartsRouter = require("./routes/carts.router")
 const viewsRouter = require("./routes/views.router")
 const usuariosRouter = require("./routes/usuarios.router")
 const sessionRouter = require("./routes/session.router");
-const { initializePassport, initializeGit } = require("./public/config/passport.confg");
+const { initializePassport, initializeGit } = require("./dao/passport.confg");
 
 const port = 8080
 
@@ -44,6 +45,7 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.static(`${__dirname}/public`))
 app.use(passport.initialize());
 initializeGit()
+initializePassport()
 
 
 app.listen(port, () => {

@@ -1,9 +1,10 @@
 const {Router} = require('express');
 const userModel = require('../dao/models/user.model');
-const {JWT_SECRET,initializePassport} = require("../public/config/passport.confg")
+const {JWT_SECRET,initializePassport} = require("../dao/passport.confg")
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
+const bcrypt = require("bcrypt")
 
 const sessionRouter = Router();
 
@@ -15,56 +16,44 @@ sessionRouter.get("/githubcallback", passport.authenticate("github", {failureRed
     res.redirect("/")
 })
 
-sessionRouter.post('/register',  async (req, res)=>{
-    const { first_name, last_name, email, age,password} = req.body; 
+sessionRouter.post('/register', async (req, res)=>{
+    const { first_name, last_name, email, age, password } = req.body; 
 
     if(!first_name || !last_name || !email || !age || !password){
         return res.status(400).send({status: 'error', error:'Missing data'})
     }
 
-    const result = await userModel.create({first_name, last_name, email, age,password})
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await userModel.create({first_name, last_name, email, age, password: hashedPassword})
     
-    const token = jwt.sign({email, password, role: "user" }, JWT_SECRET, {expiresIn:'24h'})
-    res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
+    const token = jwt.sign({ email, password: hashedPassword, role: "user" }, JWT_SECRET, {expiresIn:'24h'})
+    res.cookie('coderCookie', token, { httpOnly: true }).send({status:'success', payload: req.session.user, message:'successfully logged in'})
 })
 
+sessionRouter.post('/login', async (req, res, next) => {
+    passport.authenticate('local', async (err, user, info) => {
+        if (err) { 
+            return next(err); 
+        }
+        if (!user) { 
+            return res.status(401).send({ status: 'error', error: 'Incorrect credentials' });
+        }
 
-sessionRouter.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+        req.logIn(user, async (err) => {
+            if (err) { 
+                return next(err); 
+            }
 
+            const token = jwt.sign({ email: user.email, role: "user" }, JWT_SECRET, { expiresIn: '24h' });
+            res.cookie('coderCookie', token, { httpOnly: true });
 
-
-    if (email === "admin@gmail.com" && password === "admin123") {
-        
-        const token = jwt.sign({email, password, role: "admin" }, JWT_SECRET, {expiresIn:'24h'})
-        res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
-        return res.status(500)
-        
-    }
-
-    if (!email || !password) {
-        console.log("mal");
-        return res.status(400).send({ status: 'error', error: 'Missing data' });
-    }
-
-    const user = await userModel.findOne({ email, password });
-    if (!user) {
-        console.log("mal");
-        return res.status(401).send({ status: 'error', error: 'Incorrect credentials' });
-    }
-
-    
-
-    req.session.user = {
-        name: `${user.first_name} ${user.last_name}`,
-        email: user.email,
-        age: user.age
-    }
-
-
-    const token = jwt.sign({email, password, role: "user"}, JWT_SECRET, {expiresIn:'24h'})
-    res.cookie('coderCookie',token,{httpOnly: true }).send({status:'success',payload: req.session.user, message:'successfuly logged in'})
+            // Redirigir al usuario a la ruta /profile
+            console.log("entro")
+        });
+    })(req, res, next);
 });
+
+
 
 
 

@@ -2,23 +2,49 @@ const passport = require('passport');
 const password = require('passport')
 const jwt = require('passport-jwt');
 const gitthubStrategy = require("passport-github2")
-const userModel = require('../../dao/models/user.model');
+const userModel = require('./models/user.model');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
+
 
 const JWT_SECRET = 'ourSecret'; 
 
-const initializePassport = ()=>{
+
+
+const initializePassport = () => {
+    // JWT Strategy
     password.use('jwt', new jwt.Strategy({
         secretOrKey: JWT_SECRET, 
         jwtFromRequest: jwt.ExtractJwt.fromExtractors([cookieExtractor])
-    },(jwt_payload, done)=>{
+    },(jwt_payload, done) => {
         try {
             return done(null, jwt_payload);
         } catch (error) {
             console.log("aaa")
             return done(error)
         }
-    }))
-}
+    }));
+
+    // Local Strategy
+    passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+        try {
+            const user = await userModel.findOne({ email });
+            if (!user) {
+                return done(null, false, { message: 'Incorrect email.' });
+            }
+
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                return done(null, user);
+            } else {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
+        } catch (error) {
+            return done(error);
+        }
+    }));
+};
+
 
 const initializeGit = () => {
     passport.use("github", new gitthubStrategy({
@@ -74,6 +100,7 @@ function cookieExtractor(req){
 
     return token; 
 }
+
 
 module.exports = {
     initializePassport,
