@@ -16,41 +16,34 @@ sessionRouter.get("/githubcallback", passport.authenticate("github", {failureRed
     res.redirect("/")
 })
 
-sessionRouter.post('/register', async (req, res)=>{
-    const { first_name, last_name, email, age, password } = req.body; 
+sessionRouter.post("/register", passport.authenticate("register", {
+    session: false,
+    failureRedirect: "/login"
+}), (req, res) => {
+    res.send({ status: "success" });
+});
 
-    if(!first_name || !last_name || !email || !age || !password){
-        return res.status(400).send({status: 'error', error:'Missing data'})
-    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await userModel.create({first_name, last_name, email, age, password: hashedPassword})
+sessionRouter.post("/login", passport.authenticate("login", {
+    session: false,
+    failureRedirect: "/login"
+}), (req, res) => {
+    const { _id, first_name, last_name, email, age, password } = req.user;
+    const serializeUser = {
+        _id,
+        first_name,
+        last_name,
+        email,
+        age,
+        password
+    };
     
-    const token = jwt.sign({ email, password: hashedPassword, role: "user" }, JWT_SECRET, {expiresIn:'24h'})
-    res.cookie('coderCookie', token, { httpOnly: true }).send({status:'success', payload: req.session.user, message:'successfully logged in'})
-})
+    const token = jwt.sign(serializeUser,"tokenSecret",{expiresIn:"1h"})
 
-sessionRouter.post('/login', async (req, res, next) => {
-    passport.authenticate('local', async (err, user, info) => {
-        if (err) { 
-            return next(err); 
-        }
-        if (!user) { 
-            return res.status(401).send({ status: 'error', error: 'Incorrect credentials' });
-        }
-
-        req.logIn(user, async (err) => {
-            if (err) { 
-                return next(err); 
-            }
-
-            const token = jwt.sign({ email: user.email, role: "user" }, JWT_SECRET, { expiresIn: '24h' });
-            res.cookie('coderCookie', token, { httpOnly: true });
-
-            // Redirigir al usuario a la ruta /profile
-            console.log("entro")
-        });
-    })(req, res, next);
+    
+    res.cookie("coderCookie", token, {maxAge:60 * 60 * 1000})
+    console.log("entro")
+    res.send({status:"succes", message:"se inicio sesion", payload:token})
 });
 
 

@@ -1,4 +1,5 @@
 const {Router} = require("express")
+const passport = require('passport');
 
 
 const router = Router()
@@ -28,6 +29,11 @@ router.get('/admin', publicAccess, (req,res)=>{
     res.render("admin")
 })
 
+router.get("/current", passport.authenticate('jwt', { session: false }), (req, res) => {
+    console.log(req.headers.authorization);  // Imprime el encabezado de autorización
+    console.log(req.user);  // Imprime los datos del usuario autenticado
+    res.json({ user: req.user });
+});
 
 router.get('/', privateAccess, (req,res)=>{
     res.render('profile',{user: req.session.user})
